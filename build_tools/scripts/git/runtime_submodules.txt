@@ -7,3 +7,4 @@ third_party/spirv_cross
 third_party/tracy
 third_party/vulkan_headers
 third_party/webgpu-headers
+third_party/llvm-project

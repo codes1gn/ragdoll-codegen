@@ -34,9 +34,9 @@ macro(iree_llvm_configure_bundled)
   set(LLVM_LIBRARY_OUTPUT_INTDIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/lib")
   set(LLVM_RUNTIME_OUTPUT_INTDIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/bin")
 
-  message(STATUS "Configuring third_party/llvm-project")
+  message(STATUS "Configuring third_party/ragdoll-llvm-project")
   list(APPEND CMAKE_MESSAGE_INDENT "  ")
-  add_subdirectory("third_party/llvm-project/llvm" "llvm-project" EXCLUDE_FROM_ALL)
+  add_subdirectory("../ragdoll-llvm-project-fast-mirror/llvm" "llvm-project" EXCLUDE_FROM_ALL)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
 
   # Reset CMAKE_BUILD_TYPE to its previous setting.
@@ -58,21 +58,21 @@ macro(iree_llvm_configure_bundled)
   list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
 
   set(LLVM_INCLUDE_DIRS
-    ${IREE_SOURCE_DIR}/third_party/llvm-project/llvm/include
+    ${IREE_SOURCE_DIR}/../ragdoll-llvm-project-fast-mirror/llvm/include
     ${IREE_BINARY_DIR}/llvm-project/include
   )
   set(MLIR_INCLUDE_DIRS
-    ${IREE_SOURCE_DIR}/third_party/llvm-project/mlir/include
+    ${IREE_SOURCE_DIR}/../ragdoll-llvm-project-fast-mirror/mlir/include
     ${IREE_BINARY_DIR}/llvm-project/tools/mlir/include
   )
   set(LLD_INCLUDE_DIRS
-    ${IREE_SOURCE_DIR}/third_party/llvm-project/lld/include
+    ${IREE_SOURCE_DIR}/../ragdoll-llvm-project-fast-mirror/lld/include
     ${IREE_BINARY_DIR}/llvm-project/tools/lld/include
   )
 
   set(LLVM_BINARY_DIR "${IREE_BINARY_DIR}/llvm-project")
   set(LLVM_TOOLS_BINARY_DIR "${LLVM_BINARY_DIR}/bin")
-  set(LLVM_EXTERNAL_LIT "${IREE_SOURCE_DIR}/third_party/llvm-project/llvm/utils/lit/lit.py")
+  set(LLVM_EXTERNAL_LIT "${IREE_SOURCE_DIR}/../ragdoll-llvm-project-fast-mirror/llvm/utils/lit/lit.py")
 
   set(IREE_LLVM_LINK_BINARY "$<TARGET_FILE:${IREE_LLVM_LINK_TARGET}>")
   set(IREE_LLD_BINARY "$<TARGET_FILE:${IREE_LLD_TARGET}>")
@@ -104,7 +104,7 @@ macro(iree_llvm_configure_installed)
   # Note that LLVM style lit test helpers use LLVM_EXTERNAL_LIT, if provided,
   # so this is consistent between the projects.
   if(NOT LLVM_EXTERNAL_LIT)
-    set(LLVM_EXTERNAL_LIT "${IREE_SOURCE_DIR}/third_party/llvm-project/llvm/utils/lit/lit.py")
+    set(LLVM_EXTERNAL_LIT "${IREE_SOURCE_DIR}/../ragdoll-llvm-project-fast-mirror/llvm/utils/lit/lit.py")
   endif()
 
   set(IREE_LLVM_LINK_BINARY "$<TARGET_FILE:llvm-link>")
