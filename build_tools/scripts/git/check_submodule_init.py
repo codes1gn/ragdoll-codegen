@@ -46,7 +46,7 @@ def run():
     for submodule in submodules:
         prefix = submodule.strip()[0]
         name = submodule.split()[1]
-        if prefix == "-" and (not args.runtime_only or name in runtime_submodules):
+        if prefix == "-" and (name != "third_party/llvm-project") and (not args.runtime_only or name in runtime_submodules):
             print(
                 "The git submodule '%s' is not initialized. Please run `git submodule update --init`"
                 % (name)
