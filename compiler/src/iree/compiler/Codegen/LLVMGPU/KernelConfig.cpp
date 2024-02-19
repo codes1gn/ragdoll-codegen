@@ -722,13 +722,18 @@ static LogicalResult setRootDefaultConfig(mlir::FunctionOpInterface entryPoint,
 static LogicalResult
 setTransformDialectConfig(mlir::FunctionOpInterface entryPoint, Operation *op,
                           const TargetInfo &targetInfo) {
+  llvm::errs() << "try to setTransformDialectConfig\n";
   if (!clGPUEnableTransformDialectJit) {
+    llvm::errs() << "clGPUEnableTransformDialectJit == false\n";
     return failure();
   }
+  llvm::errs() << "clGPUEnableTransformDialectJit == true\n";
 
+  llvm::errs() << "dump translation info = ";
   auto translationInfo = IREE::Codegen::TranslationInfoAttr::get(
       entryPoint.getContext(),
       IREE::Codegen::DispatchLoweringPassPipeline::TransformDialectCodegen);
+  translationInfo.dump();
 
   // TODO: unify the target informations into one structure.
   iree_compiler::gpu::GPUModel gpuModel;
@@ -761,8 +766,12 @@ setTransformDialectConfig(mlir::FunctionOpInterface entryPoint, Operation *op,
   }
 
   if (failed(iree_compiler::gpu::matchAndSetTransformStrategy(entryPoint, op,
-                                                              gpuModel)))
+                                                              gpuModel))) {
+    llvm::errs() << "try matchAndSetTransformStrategy but failed\n";
     return failure();
+  }
+  llvm::errs() << "try matchAndSetTransformStrategy and succeed, to set transinfo = ";
+  translationInfo.dump();
   return setTranslationInfo(entryPoint, translationInfo);
 }
 
@@ -1318,11 +1327,14 @@ static LogicalResult setRootConfig(mlir::FunctionOpInterface entryPointFn,
                                    Operation *computeOp) {
   TargetInfo targetInfo = getTargetInfo(entryPointFn);
   // First try to see if there is a transform dialect configuration existing.
+  llvm::errs() << "setRootConfig\n";
   if (succeeded(
           setTransformDialectConfig(entryPointFn, computeOp, targetInfo))) {
+    llvm::errs() << "use TD\n";
     return success();
   }
   if (auto linalgOp = dyn_cast<linalg::LinalgOp>(computeOp)) {
+    llvm::errs() << "use builtin linalg strategy\n";
     if (succeeded(setContractConfig(entryPointFn, linalgOp, targetInfo))) {
       return success();
     }
@@ -1355,6 +1367,7 @@ static LogicalResult setRootConfig(mlir::FunctionOpInterface entryPointFn,
     return setUKernelConfig(entryPointFn, ukernelOp);
   }
 
+  llvm::errs() << "use default strategy\n";
   return setRootDefaultConfig(entryPointFn, computeOp, targetInfo);
 }
 

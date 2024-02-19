@@ -74,9 +74,12 @@ void MatmulStrategy::print(llvm::raw_ostream &os) const {
 }
 
 LogicalResult MatmulStrategy::validate(const GPUModel &gpuModel) const {
+  llvm::errs() << "enter MatmulStrategy::validate\n";
   // First validate the parent strategy.
-  if (failed(AbstractGemmLikeStrategy::validate(gpuModel)))
+  if (failed(AbstractGemmLikeStrategy::validate(gpuModel))) {
+    llvm::errs() << "fails at #1\n";
     return failure();
+  }
 
   // Unlike for wmma/mma, we have no special type requirements for fma.
   if (useFma)
@@ -87,22 +90,26 @@ LogicalResult MatmulStrategy::validate(const GPUModel &gpuModel) const {
   Type resElementType = captures.outputElementType;
   if (!lhsElementType.isF32() || !rhsElementType.isF32() ||
       !resElementType.isF32()) {
+    llvm::errs() << "fails at #2\n";
     LDBG("--Tensorcore matmul strategy only supported for f32: "
          << lhsElementType << ", " << rhsElementType << ", " << resElementType);
     return failure();
   }
   if (lhsElementType != rhsElementType) {
+    llvm::errs() << "fails at #3\n";
     LDBG("--Tensorcore matmul strategy mixed input types unsupported\n");
     return failure();
   }
 
   if (useMmaSync) {
     if (!gpuModel.hasTF32TensorCore) {
+      llvm::errs() << "fails at #4\n";
       LDBG("--Matmul strategy target has not TF32 tensor core\n");
       return failure();
     }
 
     if (!gpuModel.hasMmaSync) {
+      llvm::errs() << "fails at #5\n";
       LDBG("--Matmul strategy target does not support MMA.SYNC operations\n");
       return failure();
     }
@@ -120,6 +127,7 @@ LogicalResult MatmulStrategy::validate(const GPUModel &gpuModel) const {
                               config.bType != rhsElementType ||
                               config.cType != resElementType;
                      })) {
+      llvm::errs() << "fails at #6\n";
       LDBG("--Matmul strategy failed wmma type check\n");
       return failure();
     }

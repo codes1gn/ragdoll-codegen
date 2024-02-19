@@ -394,7 +394,9 @@ static BatchMatmulStrategy getBatchMatmulConfig(MLIRContext *context,
 static LogicalResult
 matchAndSetBatchMatmulStrategy(mlir::FunctionOpInterface entryPoint,
                                linalg::LinalgOp op, const GPUModel &gpuModel) {
+  llvm::errs() << "checking if fulfill Batch-Matmul Strategy\n";
   if (!clGPUEnableTransformDialectBatchMatmulStrategy) {
+    llvm::errs() << "Batch-Matmul Strategy not switch on\n";
     LDBG("--Batch matmul strategy flag turned off\n");
     return failure();
   }
@@ -436,7 +438,9 @@ matchAndSetBatchMatmulStrategy(mlir::FunctionOpInterface entryPoint,
 static LogicalResult
 matchAndSetMatmulStrategy(mlir::FunctionOpInterface entryPoint,
                           linalg::LinalgOp op, const GPUModel &gpuModel) {
+  llvm::errs() << "checking if fulfill Matmul Strategy\n";
   if (!clGPUEnableTransformDialectMatmulTensorCoreStrategy) {
+    llvm::errs() << "Matmul Strategy not switch on\n";
     LDBG("--Matmul strategy flag turned off\n");
     return failure();
   }
@@ -450,6 +454,7 @@ matchAndSetMatmulStrategy(mlir::FunctionOpInterface entryPoint,
   makeMatmulMatcher(matcherContext, matmul, fill, trailing, captures,
                     /*mustMatchEntireFunc=*/true);
   if (!matchPattern(op, *matmul)) {
+    llvm::errs() << "Matmul strategy fail to match\n";
     LDBG("--Matmul strategy fail to match\n");
     return failure();
   }
@@ -462,6 +467,7 @@ matchAndSetMatmulStrategy(mlir::FunctionOpInterface entryPoint,
   //   - If the matmul is "too small", then use the default IREE strategy.
   //   - Otherwise, we take it.
   if (!fill->getCaptured() || trailing->getCaptured()) {
+    llvm::errs() << "Matmul strategy fill / trailing preconditions failed\n";
     LDBG("--Matmul strategy fill / trailing preconditions failed\n");
     return failure();
   }
@@ -469,6 +475,7 @@ matchAndSetMatmulStrategy(mlir::FunctionOpInterface entryPoint,
   // TODO: Generalize to a good mix of sizes, alignments and element types.
   const auto &matmulSize = captures.matmulOpSizes;
   if (matmulSize.size() != 3) {
+    llvm::errs() << "Matmul strategy size capture failed\n";
     LDBG("--Matmul strategy size capture failed\n");
     return failure();
   }
@@ -483,6 +490,7 @@ matchAndSetMatmulStrategy(mlir::FunctionOpInterface entryPoint,
                     (matmulSize[1] > 0 && matmulSize[1] < 16) ||
                     (matmulSize[2] > 0 && matmulSize[2] < 16);
   if (smallCases && !clGPUEnableTransformDialectSmallMatmul) {
+    llvm::errs() << "Matmul strategy small size check failed\n";
     LDBG("--Matmul strategy small size check failed\n");
     return failure();
   }
@@ -498,6 +506,7 @@ matchAndSetMatmulStrategy(mlir::FunctionOpInterface entryPoint,
 
   if (!smallCases && guardedAlignedCases &&
       !clGPUEnableTransformDialectAlignedMatmul) {
+    llvm::errs() << "Matmul strategy alignment check failed\n";
     LDBG("--Matmul strategy alignment check failed\n");
     return failure();
   }
@@ -508,6 +517,7 @@ matchAndSetMatmulStrategy(mlir::FunctionOpInterface entryPoint,
 
   // Validate the strategy configuration against the compilation target.
   if (failed(strategy.validate(gpuModel))) {
+    llvm::errs() << "Matmul strategy failed to validate\n";
     LDBG("--Matmul strategy failed to validate\n");
     return failure();
   }
@@ -517,6 +527,7 @@ matchAndSetMatmulStrategy(mlir::FunctionOpInterface entryPoint,
   if (!strategy.useFma && !strategy.cliOptionsSpecified &&
       (!captures.lhsElementType.isF32() || !captures.rhsElementType.isF32() ||
        !captures.outputElementType.isF32())) {
+    llvm::errs() << "Matmul strategy elemental type check failed\n";
     LDBG("--Matmul strategy elemental type check failed\n");
     return failure();
   }
